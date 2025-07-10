@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JEE/NEET Coaching Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .main-content {
+            text-align: center;
+            color: white;
+            margin-top: 50px;
+        }
+
+        .main-content h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .main-content p {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        /* Chat Container */
+        .chat-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 350px;
+            height: 500px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 1000;
+            transform: translateY(100%);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .chat-container.open {
+            transform: translateY(0);
+        }
+
+        /* Chat Header */
+        .chat-header {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .chat-header-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .bot-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-right: 10px;
+        }
+
+        .bot-info h3 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .bot-info p {
+            margin: 0;
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .close-chat {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        /* Chat Messages */
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.bot {
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .message.user {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .message-content {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            word-wrap: break-word;
+        }
+
+        .message.bot .message-content {
+            background: white;
+            color: #333;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .message.user .message-content {
+            background: #4CAF50;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        /* Quick Reply Buttons */
+        .quick-replies {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .quick-reply-btn {
+            background: #e3f2fd;
+            border: 1px solid #2196F3;
+            color: #2196F3;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-reply-btn:hover {
+            background: #2196F3;
+            color: white;
+        }
+
+        /* Typing Indicator */
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            background: white;
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #999;
+            animation: typing 1.5s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+
+            0%,
+            60%,
+            100% {
+                transform: translateY(0);
+            }
+
+            30% {
+                transform: translateY(-10px);
+            }
+        }
+
+        /* Chat Input */
+        .chat-input {
+            padding: 15px;
+            background: white;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .chat-input input:focus {
+            border-color: #4CAF50;
+        }
+
+        .send-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .send-btn:hover {
+            background: #45a049;
+        }
+
+        /* Chat Toggle Button */
+        .chat-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 1001;
+            transition: transform 0.2s;
+        }
+
+        .chat-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        .chat-toggle.hidden {
+            display: none;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .chat-container {
+                width: calc(100vw - 20px);
+                height: calc(100vh - 40px);
+                right: 10px;
+                bottom: 10px;
+                border-radius: 15px;
+            }
+
+            .main-content h1 {
+                font-size: 2em;
+            }
+
+            .main-content p {
+                font-size: 1em;
+                padding: 0 20px;
+            }
+        }
+
+        /* WhatsApp Button Styling */
+        .whatsapp-btn {
+            background: #25D366 !important;
+            color: white !important;
+            border: none !important;
+        }
+
+        .whatsapp-btn:hover {
+            background: #128C7E !important;
+        }
+
+        /* Special Message Styling */
+        .highlight-message {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            color: #333;
+            font-weight: 500;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main-content">
+        <h1>🎓 Elite JEE/NEET Coaching</h1>
+        <p>Excellence in Medical & Engineering Entrance Preparation</p>
+        <p>💬 Need help? Click the chat button below to get instant assistance!</p>
+    </div>
+
+    <!-- Chat Toggle Button -->
+    <button class="chat-toggle" onclick="toggleChat()">💬</button>
+
+    <!-- Chat Container -->
+    <div class="chat-container" id="chatContainer">
+        <div class="chat-header">
+            <div class="chat-header-info">
+                <div class="bot-avatar">🤖</div>
+                <div class="bot-info">
+                    <h3>JEE/NEET Assistant</h3>
+                    <p>Online • Ready to help</p>
+                </div>
+            </div>
+            <button class="close-chat" onclick="toggleChat()">×</button>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <!-- Messages will be added here -->
+        </div>
+
+        <div class="chat-input">
+            <input type="text" id="messageInput" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
+            <button class="send-btn" onclick="sendMessage()">➤</button>
+        </div>
+    </div>
+
+    <script>
+        // Chat Bot Configuration
+        const botConfig = {
+            name: "JEE/NEET Assistant",
+            welcomeMessage: "Hello! 👋 I'm here to help you with JEE/NEET coaching queries. How can I assist you today?",
+            whatsappNumber: "919876543210", // Replace with actual number
+            ownerEmail: "coaching@example.com" // Replace with actual email
+        };
+
+        // Predefined Q&A Database
+        const qaDatabase = {
+            // Greetings
+            "hello": "Hello! 👋 Welcome to Elite JEE/NEET Coaching! I'm here to help you with all your queries about our courses.",
+            "hi": "Hi there! 😊 How can I help you today with your JEE/NEET preparation?",
+            "hey": "Hey! 👋 What would you like to know about our coaching programs?",
+
+            // Course Information
+            "courses": "We offer comprehensive courses for:\n🎯 JEE Main & Advanced\n🏥 NEET (Medical)\n📚 Foundation (11th & 12th)\n💡 Crash Courses\n\nWhich one interests you?",
+            "jee": "Our JEE program includes:\n📖 Complete syllabus coverage\n🧪 Regular tests & analysis\n👨‍🏫 Expert faculty\n📊 Performance tracking\n💰 Fee: ₹45,000/year\n\nWould you like more details?",
+            "neet": "Our NEET program features:\n🧬 Biology, Chemistry, Physics\n🔬 Lab practicals\n📝 Mock tests\n🏥 Medical career guidance\n💰 Fee: ₹40,000/year\n\nInterested in joining?",
+            "fees": "Our fee structure:\n💰 JEE Course: ₹45,000/year\n💰 NEET Course: ₹40,000/year\n💰 Foundation: ₹35,000/year\n💰 Crash Course: ₹15,000\n\n📞 Contact for scholarships!",
+            "fee": "Our fee structure:\n💰 JEE Course: ₹45,000/year\n💰 NEET Course: ₹40,000/year\n💰 Foundation: ₹35,000/year\n💰 Crash Course: ₹15,000\n\n📞 Contact for scholarships!",
+            "price": "Our fee structure:\n💰 JEE Course: ₹45,000/year\n💰 NEET Course: ₹40,000/year\n💰 Foundation: ₹35,000/year\n💰 Crash Course: ₹15,000\n\n📞 Contact for scholarships!",
+
+            // Timing & Schedule
+            "timing": "Our class timings:\n🌅 Morning Batch: 6:00 AM - 9:00 AM\n🌞 Day Batch: 10:00 AM - 1:00 PM\n🌆 Evening Batch: 5:00 PM - 8:00 PM\n\nWhich batch suits you?",
+            "time": "Our class timings:\n🌅 Morning Batch: 6:00 AM - 9:00 AM\n🌞 Day Batch: 10:00 AM - 1:00 PM\n🌆 Evening Batch: 5:00 PM - 8:00 PM\n\nWhich batch suits you?",
+            "schedule": "📅 Weekly Schedule:\n• Monday-Friday: Regular classes\n• Saturday: Doubt clearing\n• Sunday: Test series\n\n📚 Flexible timing available!",
+
+            // Location & Contact
+            "location": "📍 We're located at:\nElite Coaching Center\n123 Education Street, Near City Mall\nMumbai, Maharashtra 400001\n\n🚌 Well connected by public transport!",
+            "address": "📍 Our address:\nElite Coaching Center\n123 Education Street, Near City Mall\nMumbai, Maharashtra 400001\n\n🗺️ Need directions?",
+            "contact": "📞 Contact Details:\n📱 Phone: +91 98765 43210\n📧 Email: info@elitecoaching.com\n💬 WhatsApp: Available 24/7\n\n🕐 Office Hours: 9 AM - 6 PM",
+            "phone": "📞 Call us at: +91 98765 43210\n💬 WhatsApp us anytime!\n📧 Email: info@elitecoaching.com",
+
+            // Faculty & Results
+            "faculty": "👨‍🏫 Our Expert Faculty:\n🎓 IIT & AIIMS Alumni\n📚 10+ years experience\n🏆 Proven track record\n💡 Student-friendly approach\n\nMeet our teachers in person!",
+            "teachers": "👨‍🏫 Our Expert Faculty:\n🎓 IIT & AIIMS Alumni\n📚 10+ years experience\n🏆 Proven track record\n💡 Student-friendly approach\n\nMeet our teachers in person!",
+            "results": "🏆 Our Success Record:\n✅ 95% students clear JEE/NEET\n🥇 500+ selections in top colleges\n🎯 Average rank improvement: 70%\n📈 Consistent performance since 2010",
+            "success": "🏆 Our Success Record:\n✅ 95% students clear JEE/NEET\n🥇 500+ selections in top colleges\n🎯 Average rank improvement: 70%\n📈 Consistent performance since 2010",
+
+            // Admission & Enrollment
+            "admission": "📝 Admission Process:\n1️⃣ Fill application form\n2️⃣ Entrance test (optional)\n3️⃣ Counseling session\n4️⃣ Fee payment\n5️⃣ Start classes!\n\n🚀 Admissions open now!",
+            "enroll": "🎓 Ready to enroll?\n📋 Documents needed:\n• 10th & 12th mark sheets\n• Passport size photos\n• ID proof\n💳 Payment options available!",
+            "join": "🤝 Join our coaching family!\n📞 Call: +91 98765 43210\n📱 WhatsApp for quick enrollment\n🏢 Visit our center anytime!",
+
+            // Study Material & Features
+            "material": "📚 Study Material Includes:\n📖 Comprehensive books\n📝 Practice sheets\n💻 Online resources\n📱 Mobile app access\n🎥 Video lectures",
+            "books": "📚 We provide:\n📖 Updated study material\n📝 Question banks\n📊 Previous year papers\n💡 Tips & tricks booklets\n🎯 Subject-wise modules",
+            "online": "💻 Online Features:\n🌐 Live streaming classes\n📹 Recorded lectures\n📱 Mobile app\n💬 Online doubt solving\n📊 Progress tracking",
+
+            // Default responses for unmatched queries
+            "default": "I understand you're looking for information. Let me help you with some quick options! 😊",
+            "thanks": "You're welcome! 😊 Feel free to ask if you need anything else. We're here to help you succeed! 🎓",
+            "thank you": "You're welcome! 😊 Feel free to ask if you need anything else. We're here to help you succeed! 🎓",
+            "bye": "Thank you for visiting! 👋 Remember, we're here whenever you need guidance. Best of luck with your preparation! 🌟"
+        };
+
+        // Quick Reply Options
+        const quickReplies = {
+            welcome: [
+                { text: "📚 View Courses", action: "courses" },
+                { text: "💰 Fee Structure", action: "fees" },
+                { text: "📍 Location", action: "location" },
+                { text: "📞 Contact Us", action: "contact" }
+            ],
+            courses: [
+                { text: "🎯 JEE Details", action: "jee" },
+                { text: "🏥 NEET Details", action: "neet" },
+                { text: "🕐 Class Timing", action: "timing" },
+                { text: "💬 WhatsApp", action: "whatsapp" }
+            ],
+            general: [
+                { text: "👨‍🏫 Faculty Info", action: "faculty" },
+                { text: "🏆 Results", action: "results" },
+                { text: "📝 Admission", action: "admission" },
+                { text: "💬 WhatsApp", action: "whatsapp" }
+            ]
+        };
+
+        // Chat State
+        let chatOpen = false;
+        let messageHistory = [];
+
+        // Initialize chat - MODIFIED to always start fresh
+        function initializeChat() {
+            // Always start with a fresh welcome message
+            setTimeout(() => {
+                addBotMessage(botConfig.welcomeMessage, quickReplies.welcome);
+            }, 500);
+        }
+
+        // Toggle chat visibility
+        function toggleChat() {
+            const container = document.getElementById('chatContainer');
+            const toggle = document.querySelector('.chat-toggle');
+
+            chatOpen = !chatOpen;
+
+            if (chatOpen) {
+                container.classList.add('open');
+                toggle.classList.add('hidden');
+                // Clear any existing messages and start fresh
+                document.getElementById('chatMessages').innerHTML = '';
+                messageHistory = [];
+                initializeChat();
+            } else {
+                container.classList.remove('open');
+                toggle.classList.remove('hidden');
+            }
+        }
+
+        // Add bot message - MODIFIED to not save by default
+        function addBotMessage(text, replies = null, save = false) {
+            const messagesContainer = document.getElementById('chatMessages');
+
+            // Add typing indicator
+            showTypingIndicator();
+
+            setTimeout(() => {
+                hideTypingIndicator();
+
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message bot';
+
+                let messageContent = `
+                    <div class="message-content">${text}</div>
+                `;
+
+                if (replies && replies.length > 0) {
+                    messageContent += '<div class="quick-replies">';
+                    replies.forEach(reply => {
+                        if (reply.action === 'whatsapp') {
+                            messageContent += `<button class="quick-reply-btn whatsapp-btn" onclick="openWhatsApp()">${reply.text}</button>`;
+                        } else {
+                            messageContent += `<button class="quick-reply-btn" onclick="handleQuickReply('${reply.action}')">${reply.text}</button>`;
+                        }
+                    });
+                    messageContent += '</div>';
+                }
+
+                messageDiv.innerHTML = messageContent;
+                messagesContainer.appendChild(messageDiv);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+                if (save) {
+                    messageHistory.push({ type: 'bot', text, replies });
+                }
+            }, 1000 + Math.random() * 1000);
+        }
+
+        // Add user message - MODIFIED to not save by default
+        function addUserMessage(text, save = false) {
+            const messagesContainer = document.getElementById('chatMessages');
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message user';
+            messageDiv.innerHTML = `<div class="message-content">${text}</div>`;
+
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            if (save) {
+                messageHistory.push({ type: 'user', text });
+            }
+        }
+
+        // Show typing indicator
+        function showTypingIndicator() {
+            const messagesContainer = document.getElementById('chatMessages');
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message bot';
+            typingDiv.id = 'typingIndicator';
+            typingDiv.innerHTML = `
+                <div class="typing-indicator">
+                    <div class="typing-dots">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                </div>
+            `;
+            messagesContainer.appendChild(typingDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Hide typing indicator
+        function hideTypingIndicator() {
+            const typingIndicator = document.getElementById('typingIndicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+
+        // Process user message
+        function processMessage(message) {
+            const lowerMessage = message.toLowerCase().trim();
+
+            // Check for exact matches first
+            if (qaDatabase[lowerMessage]) {
+                const response = qaDatabase[lowerMessage];
+                const replies = getRelevantQuickReplies(lowerMessage);
+                addBotMessage(response, replies);
+                return;
+            }
+
+            // Check for keyword matches
+            const keywords = Object.keys(qaDatabase);
+            const matchedKeyword = keywords.find(keyword =>
+                lowerMessage.includes(keyword) && keyword !== 'default'
+            );
+
+            if (matchedKeyword) {
+                const response = qaDatabase[matchedKeyword];
+                const replies = getRelevantQuickReplies(matchedKeyword);
+                addBotMessage(response, replies);
+                return;
+            }
+
+            // Default response with helpful options
+            addBotMessage(
+                "I'd love to help you with that! 😊 Here are some topics I can assist you with:",
+                quickReplies.general
+            );
+        }
+
+        // Get relevant quick replies based on context
+        function getRelevantQuickReplies(keyword) {
+            if (['courses', 'jee', 'neet'].includes(keyword)) {
+                return quickReplies.courses;
+            } else if (['hello', 'hi', 'hey'].includes(keyword)) {
+                return quickReplies.welcome;
+            } else {
+                return quickReplies.general;
+            }
+        }
+
+        // Handle quick reply button clicks
+        function handleQuickReply(action) {
+            if (action === 'whatsapp') {
+                openWhatsApp();
+                return;
+            }
+
+            // Find the button text for the action
+            let buttonText = action;
+            Object.values(quickReplies).forEach(replySet => {
+                const reply = replySet.find(r => r.action === action);
+                if (reply) buttonText = reply.text;
+            });
+
+            addUserMessage(buttonText);
+            processMessage(action);
+        }
+
+        // Open WhatsApp
+        function openWhatsApp() {
+            const message = encodeURIComponent("Hi! I'm interested in JEE/NEET coaching. Can you provide more details?");
+            const whatsappUrl = `https://wa.me/${botConfig.whatsappNumber}?text=${message}`;
+            window.open(whatsappUrl, '_blank');
+
+            addBotMessage("Great! I've opened WhatsApp for you. You can also continue chatting here if you prefer! 😊");
+        }
+
+        // Send message function - MODIFIED to not save messages
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+
+            if (message === '') return;
+
+            addUserMessage(message, false); // Don't save user messages
+            input.value = '';
+
+            setTimeout(() => {
+                processMessage(message);
+            }, 500);
+        }
+
+        // Handle Enter key press
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // Clear chat history function - SIMPLIFIED
+        function clearChatHistory() {
+            messageHistory = [];
+            document.getElementById('chatMessages').innerHTML = '';
+            initializeChat();
+        }
+
+        // Initialize when page loads - SIMPLIFIED
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('JEE/NEET Coaching Chatbot initialized! 🎓');
+
+            // Add some welcome animation
+            setTimeout(() => {
+                const toggle = document.querySelector('.chat-toggle');
+                toggle.style.animation = 'bounce 2s infinite';
+            }, 2000);
+        });
+
+        // Add bounce animation to CSS via JavaScript
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes bounce {
+                0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+                40% { transform: translateY(-10px); }
+                60% { transform: translateY(-5px); }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Multilingual support (basic implementation)
+        function translateMessage(message, language = 'en') {
+            // Basic translation mapping (expand as needed)
+            const translations = {
+                'hi': {
+                    'Hello': 'नमस्ते',
+                    'How can I help you?': 'मैं आपकी कैसे सहायता कर सकता हूं?',
+                    'Thank you': 'धन्यवाद'
+                },
+                'mr': {
+                    'Hello': 'नमस्कार',
+                    'How can I help you?': 'मी तुमची कशी मदत करू शकतो?',
+                    'Thank you': 'धन्यवाद'
+                }
+            };
+
+            return translations[language] && translations[language][message] ? translations[language][message] : message;
+        }
+    </script>
+</body>
+
+</html>
